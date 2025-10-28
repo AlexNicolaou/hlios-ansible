@@ -1,6 +1,6 @@
 ---
 - name: Deploy MQTT Broker (Mosquitto)
-  hosts: mqtt_servers
+  hosts: all
   become: yes
   tasks:
     - name: Ensure apt cache is updated
