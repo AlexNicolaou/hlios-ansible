@@ -22,10 +22,16 @@
         state: present
         update_cache: yes
 
-    - name: Create nexus user and group
+    - name: Create nexus group
+      ansible.builtin.group:
+        name: nexus
+        state: present
+        system: yes
+
+    - name: Create nexus user
       ansible.builtin.user:
-        name: "{{ nexus_user }}"
-        group: "{{ nexus_group }}"
+        name: nexus
+        group: nexus
         create_home: no
         shell: /bin/false
         system: yes
