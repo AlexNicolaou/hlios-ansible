@@ -4,7 +4,6 @@
   tasks:
     - name: Update APT repositories cache
       ansible.builtin.apt:
-        name: foo
         update_cache: yes
         update_cache_retries: 10
         cache_valid_time: 3600
@@ -17,4 +16,5 @@
     - name: Clean APT cache
       ansible.builtin.apt:
         clean: yes
+
 
