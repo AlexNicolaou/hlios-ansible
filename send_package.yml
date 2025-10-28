@@ -1,0 +1,42 @@
+- name: "SEND PACKAGE {{package}}"
+  remote_user: root
+  hosts: machines
+  
+  vars:
+    manager_package_dir: "/root/temporary_storage/Packages/{{package}}"
+    manager_package_zip: "/{{package}}.zip"
+
+    planet_package_zip: "~/{{package}}.zip"
+    planet_temporary_storage_dir: ~/temporary_storage/Packages
+
+
+  tasks:
+
+    - name: "{{package}} | check the temporary_storage directory"
+      ansible.builtin.file:
+        path:  "{{planet_temporary_storage_dir}}"
+        state: directory
+
+    - name: "{{package}} | Create a zip archive of on the host"
+      community.general.archive:
+        path: "{{manager_package_dir}}"
+        dest: "{{manager_package_zip}}"
+        format: zip
+      delegate_to: localhost
+      become: false
+    
+    - name: "{{package}} | Transfer the zip from host to remote machine"
+      ansible.builtin.copy:
+        src:  "{{manager_package_zip}}"
+        dest:  "{{planet_package_zip}}"
+    
+    - name: "{{package}} | Extract the zip on the remote machine"
+      ansible.builtin.unarchive:
+        src:  "{{planet_package_zip}}"
+        dest: "{{planet_temporary_storage_dir}}"
+        remote_src: yes
+    
+    - name: "{{package}} | Remove the zip on the remote machine"
+      ansible.builtin.file:
+        path:  "{{planet_package_zip}}"
+        state: absent
