@@ -23,7 +23,7 @@
         enabled: yes
 
     - name: Open MQTT port 1883 on UFW firewall (optional)
-      ansible.builtin.ufw:
+      community.general.ufw:
         rule: allow
         port: 1883
         proto: tcp
