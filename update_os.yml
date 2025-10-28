@@ -1,0 +1,19 @@
+- name: "Update Operating System"
+  hosts: all
+  
+  tasks:
+    - name: Update APT repositories cache
+      ansible.builtin.apt:
+        name: foo
+        update_cache: yes
+        update_cache_retries: 10
+        cache_valid_time: 3600
+
+    - name: Upgrade APT packages
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
+
+    - name: Clean APT cache
+      ansible.builtin.apt:
+      clean: yes
