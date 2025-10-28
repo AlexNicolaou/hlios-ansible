@@ -1,0 +1,30 @@
+---
+- name: Deploy MQTT Broker (Mosquitto)
+  hosts: all
+  become: yes
+
+  tasks:
+
+    - name: Ensure apt cache is updated
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install Mosquitto broker and client
+      ansible.builtin.apt:
+        name:
+          - mosquitto
+          - mosquitto-clients
+        state: present
+
+    - name: Ensure Mosquitto service is enabled and running
+      ansible.builtin.service:
+        name: mosquitto
+        state: started
+        enabled: yes
+
+    - name: Open MQTT port 1883 on UFW firewall (optional)
+      ansible.builtin.ufw:
+        rule: allow
+        port: 1883
+        proto: tcp
+      when: ansible_facts['os_family'] == 'Debian'
