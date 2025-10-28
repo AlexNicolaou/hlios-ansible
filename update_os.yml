@@ -1,4 +1,6 @@
 - name: "Update Operating System"
+  hosts: all  
+  become: true
   
   tasks:
     - name: Update APT repositories cache
@@ -16,4 +18,3 @@
     - name: Clean APT cache
       ansible.builtin.apt:
         clean: yes
-
