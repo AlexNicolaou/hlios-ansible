@@ -1,0 +1,96 @@
+---
+- name: Deploy Sonatype Nexus Repository
+  hosts: all
+  become: yes
+
+  vars:
+    nexus_version: "3.57.0-01"   # change to latest if needed
+    nexus_user: nexus
+    nexus_group: nexus
+    nexus_install_dir: /opt/nexus
+    nexus_data_dir: /opt/sonatype-work
+    nexus_download_url: "https://download.sonatype.com/nexus/3/nexus-${nexus_version}-unix.tar.gz"
+
+  tasks:
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - openjdk-11-jre-headless
+          - wget
+          - tar
+        state: present
+        update_cache: yes
+
+    - name: Create nexus user and group
+      ansible.builtin.user:
+        name: "{{ nexus_user }}"
+        group: "{{ nexus_group }}"
+        create_home: no
+        shell: /bin/false
+        system: yes
+
+    - name: Create installation and data directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ nexus_user }}"
+        group: "{{ nexus_group }}"
+        mode: "0755"
+      loop:
+        - "{{ nexus_install_dir }}"
+        - "{{ nexus_data_dir }}"
+
+    - name: Download Nexus tarball
+      ansible.builtin.get_url:
+        url: "{{ nexus_download_url }}"
+        dest: "/tmp/nexus-{{ nexus_version }}.tar.gz"
+        mode: '0644'
+
+    - name: Extract Nexus
+      ansible.builtin.unarchive:
+        src: "/tmp/nexus-{{ nexus_version }}.tar.gz"
+        dest: "{{ nexus_install_dir }}"
+        remote_src: yes
+        extra_opts: [--strip-components=1]
+
+    - name: Set ownership on Nexus directories
+      ansible.builtin.file:
+        path: "{{ nexus_install_dir }}"
+        state: directory
+        owner: "{{ nexus_user }}"
+        group: "{{ nexus_group }}"
+        recurse: yes
+
+    - name: Create systemd service for Nexus
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/nexus.service
+        content: |
+          [Unit]
+          Description=nexus service
+          After=network.target
+
+          [Service]
+          Type=forking
+          LimitNOFILE=65536
+          User={{ nexus_user }}
+          Group={{ nexus_group }}
+          ExecStart={{ nexus_install_dir }}/bin/nexus start
+          ExecStop={{ nexus_install_dir }}/bin/nexus stop
+          Restart=on-abort
+
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
+    - name: Enable and start Nexus service
+      ansible.builtin.systemd:
+        name: nexus
+        state: started
+        enabled: yes
