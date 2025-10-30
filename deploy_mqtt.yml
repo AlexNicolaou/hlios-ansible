@@ -2,7 +2,7 @@
 - name: Deploy MQTT Broker (Mosquitto)
   hosts: all
   become: yes
-  tasks:
+tasks:
     - name: Ensure apt cache is updated
       ansible.builtin.apt:
         update_cache: yes
